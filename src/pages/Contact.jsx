@@ -7,22 +7,84 @@ import {useState} from "react";
 
 
 export const Contact = () => {
-    const {toast} = useToast();
+    const messageRateLimit = 3;
+    const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
-    const handleSubmit = (e) => {
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // Helper to check and update submission rate limits
+    const checkRateLimit = () => {
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+
+        // Retrieve existing history or default to empty array
+        const submissionHistory = JSON.parse(localStorage.getItem("contact_submissions") || "[]");
+
+        // Filter history to only keep timestamps within the last hour
+        const recentSubmissions = submissionHistory.filter(timestamp => now - timestamp < oneHour);
+
+        if (recentSubmissions.length >= messageRateLimit) {
+            return { allowed: false, remainingTime: oneHour - (now - recentSubmissions[0]) };
+        }
+
+        return { allowed: true, history: recentSubmissions };
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Run the rate limit verification check
+        const limitCheck = checkRateLimit();
+        if (!limitCheck.allowed) {
+            const minutesLeft = Math.ceil(limitCheck.remainingTime / (60 * 1000));
+            toast({
+                title: "Too many messages",
+                description: `Rate limit reached. Please wait ${minutesLeft} minutes before trying again.`,
+                variant: "destructive", // Styled error alert
+            });
+            return;
+        }
 
         setIsSubmitting(true);
 
-        setTimeout(() => {
-            toast({
-                title: "Message sent!",
-                description: "Thank you for your message. I'll get back to you soon!",
+        const data = new FormData();
+        data.append("name", formData.name);
+        data.append("email", formData.email);
+        data.append("message", formData.message);
+
+        try {
+            const response = await fetch('https://formgrid.dev/api/f/0e7qhq1k', {
+                method: 'POST',
+                body: data,
             });
+
+            if (response.ok) {
+                toast({
+                    title: "Message sent!",
+                    description: "Thank you for your message. I'll get back to you soon!",
+                });
+
+                // Log successful submission timestamp in localStorage
+                const updatedHistory = [...limitCheck.history, Date.now()];
+                localStorage.setItem("contact_submissions", JSON.stringify(updatedHistory));
+
+                setFormData({ name: '', email: '', message: '' });
+            } else {
+                throw new Error("Message was not sent! :(. Try again later or contact me directly.");
+            }
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Something went wrong, please try again.",
+            });
+        } finally {
             setIsSubmitting(false);
-        }, 1500);
-    }
+        }
+    };
 
     return <section className="py-24 px-4 relative bg-secondary/30">
         <div className="container mx-auto mt-32 max-w-5xl">
@@ -125,7 +187,7 @@ export const Contact = () => {
                 >
                     <h3 className="text-2xl font-semibold mb-6">Send a Message</h3>
 
-                    <form className="space-y-6">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label
                                 htmlFor="name"
@@ -138,6 +200,8 @@ export const Contact = () => {
                                 id="name"
                                 name="name"
                                 required
+                                value={formData.name}
+                                onChange={handleChange}
                                 className="w-full px-4 py-4 rounded-md border border-input bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                                 placeholder="Mārcis Upenieks..."
                             />
@@ -154,6 +218,8 @@ export const Contact = () => {
                                 id="email"
                                 name="email"
                                 required
+                                value={formData.email}
+                                onChange={handleChange}
                                 className="w-full px-4 py-4 rounded-md border border-input bg-background focus:outline-hidden focus:ring-2 focus:ring-primary"
                                 placeholder="john@email.com"
                             />
@@ -169,6 +235,8 @@ export const Contact = () => {
                                 id="message"
                                 name="message"
                                 required
+                                value={formData.message}
+                                onChange={handleChange}
                                 className="w-full px-4 py-4 rounded-md border border-input bg-background focus:outline-hidden focus:ring-2 focus:ring-primary resize-none"
                                 placeholder="Hello, I'd like to..."
                             />

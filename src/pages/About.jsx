@@ -22,7 +22,7 @@ export const About = () => {
                         Writing and composing soundtrack inspired music. Whether it is with heavy distorted instruments, soft string melodies or percussive elements.
                     </p>
                     <p>
-                        #TODO.
+
                     </p>
                 </div>
             </div>

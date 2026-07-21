@@ -1,4 +1,7 @@
 import {ExternalLink} from "lucide-react";
+import SpotifyIconIcon from "@/components/icons/SpotifyIcon.tsx";
+import YoutubeIcon from "@/components/icons/YoutubeIcon.tsx";
+
 
 const projects = [
     {
@@ -30,10 +33,11 @@ const projects = [
     },
 ];
 
+
 export const Projects = () => {
     return <section className="py-24 px-4 relative">
         <div className="container mx-auto mt-32 max-w-5xl">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center pb-24"> Featured projects</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center pb-24">Projects</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {projects.map((project, key) => (
@@ -45,7 +49,7 @@ export const Projects = () => {
                         <div className="p-6">
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {project.tags.map((tag) => (
-                                    <span className="px-2 py-1 text-xs font-medium border rounded-full bg-secondary text-secondary-foreground">
+                                    <span key={tag} className="px-2 py-1 text-xs font-medium border rounded-full bg-secondary text-secondary-foreground">
                                         {tag}
                                     </span>
                                 ))}
@@ -55,19 +59,20 @@ export const Projects = () => {
                             <p className="text-muted-foreground text-sm mb-4">{project.description}</p>
                             <div className="flex justify-between items-center">
                                 <div className="flex space-x-3">
+                                    <p className="font-bold">Listen in:</p>
                                     <a
                                         href={project.spotifyUrl}
                                         target="_blank"
                                         className="text-foreground/80 hover:text-primary transition-colors duration-300"
                                     >
-                                        <ExternalLink size={20} />
+                                        <SpotifyIconIcon size={26} />
                                     </a>
                                     <a
                                         href={project.youtubeUrl}
                                         target="_blank"
                                         className="text-foreground/80 hover:text-primary transition-colors duration-300"
                                     >
-                                        <ExternalLink size={20} />
+                                        <YoutubeIcon size={26} />
                                     </a>
                                 </div>
                             </div>
